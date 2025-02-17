@@ -22,3 +22,10 @@
   become: true
   args:
     creates: /usr/local/bin/k3s
+
+- name: Kubeconfig is transferred to the local machine
+  become: true
+  ansible.builtin.fetch:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: output/kubeconfig.yaml
+    flat: true
