@@ -1,4 +1,24 @@
-- name: Apt packages are updated
+- name: K3s install script is present
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /tmp/install_k3s.sh
+    mode: '0755'
+
+- name: K3s configuration directory exists
+  ansible.builtin.file:
+    name: /etc/rancher/k3s
+    state: directory
+    mode: '0755'
+
+- name: K3s configuration is copied
   become: true
-  ansible.builtin.apt:
-    update_cache: true
+  ansible.builtin.copy:
+    src: k3s-config.yaml
+    dest: /etc/rancher/k3s/config.yaml
+    mode: '0755'
+
+- name: K3s binary is installed
+  ansible.builtin.command: /tmp/install_k3s.sh
+  become: true
+  args:
+    creates: /usr/local/bin/k3s

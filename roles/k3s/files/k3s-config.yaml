@@ -1,0 +1,5 @@
+write-kubeconfig-mode: "0755"
+cluster-init: true
+# tls-san:
+#   - "foo.local"
+# node-label:
