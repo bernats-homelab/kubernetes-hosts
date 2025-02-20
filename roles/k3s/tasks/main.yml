@@ -1,31 +1,56 @@
-- name: K3s install script is present
-  ansible.builtin.get_url:
-    url: https://get.k3s.io
-    dest: /tmp/install_k3s.sh
-    mode: '0755'
+- name: Install k3s
+  hosts: all
+  become: false
+  tasks:
+    - name: K3s install script is present
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: /tmp/install_k3s.sh
+        mode: '0755'
 
-- name: K3s configuration directory exists
-  ansible.builtin.file:
-    name: /etc/rancher/k3s
-    state: directory
-    mode: '0755'
+    - name: K3s configuration directory exists
+      ansible.builtin.file:
+        name: /etc/rancher/k3s
+        state: directory
+        mode: '0755'
 
-- name: K3s configuration is copied
+    - name: K3s configuration is copied
+      become: true
+      ansible.builtin.copy:
+        src: k3s-config.yaml
+        dest: /etc/rancher/k3s/config.yaml
+        mode: '0755'
+
+- name: Set up control-plane
+  hosts: control_plane
   become: true
-  ansible.builtin.copy:
-    src: k3s-config.yaml
-    dest: /etc/rancher/k3s/config.yaml
-    mode: '0755'
+  tasks:
+    - name: K3s binary is installed
+      ansible.builtin.command: /tmp/install_k3s.sh
+      args:
+        creates: /usr/local/bin/k3s
 
-- name: K3s binary is installed
-  ansible.builtin.command: /tmp/install_k3s.sh
-  become: true
-  args:
-    creates: /usr/local/bin/k3s
+    - name: Kubeconfig is transferred to the local machine
+      ansible.builtin.fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: output/kubeconfig.yaml
+        flat: true
 
-- name: Kubeconfig is transferred to the local machine
+    - name: Server token is fetched
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/token
+      register: slurped_server_token
+
+- name: Set up workers
+  hosts: worker
   become: true
-  ansible.builtin.fetch:
-    src: /etc/rancher/k3s/k3s.yaml
-    dest: output/kubeconfig.yaml
-    flat: true
+  tasks:
+    - name: K3s binary is installed
+      ansible.builtin.command:
+        cmd: |
+          /tmp/install_k3s.sh \
+          | K3S_URL=192.168.1.22 \
+            K3S_TOKEN={{ slurped_server_token | ansible.builtin.b64decode }} \
+            sh -s -
+      args:
+        creates: /usr/local/bin/k3s
