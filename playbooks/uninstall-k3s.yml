@@ -1,0 +1,19 @@
+- name: Uninstall control plane
+  hosts: control_plane
+  gather_facts: false
+  become: true
+  tasks:
+    - name: K3s is uninstalled from control plane
+      ansible.builtin.command: /usr/local/bin/k3s-uninstall.sh
+      args:
+        removes: /etc/rancher/k3s
+
+- name: Uninstall workers
+  hosts: worker
+  gather_facts: false
+  become: true
+  tasks:
+    - name: K3s is uninstalled from worker
+      ansible.builtin.command: /usr/local/bin/k3s-agent-uninstall.sh
+      args:
+        removes: /etc/rancher/k3s
