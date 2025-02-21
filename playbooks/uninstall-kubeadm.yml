@@ -1,0 +1,8 @@
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/
+# do all this first for all the workers, leave the control plane last
+# drain node: kubectl drain <node name> --delete-emptydir-data --force --ignore-daemonsets
+# run kubeadm reset
+# reset iptables with iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+# ipvsadm -C
+# remove node from the cluster with kubectl delete node
+#

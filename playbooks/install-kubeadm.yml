@@ -1,0 +1,24 @@
+# Source: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+# disable swap on nodes
+# install containerd runtime
+# install kubeadm, kubelet and kubectl
+# block systemupgrades on kubernetes packages
+# configure cgroup driver
+# Source: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/
+# check default gateway ip with ip route show
+# run kubeadm init
+#   put control-plane-endpoint flag with the ip of the control plane and a dns
+# copy kubeconfig file to home directory and change permissions
+# apply a pod network addon (CNI) -> https://kubernetes.io/docs/concepts/cluster-administration/addons/#networking-and-network-policy
+#   important: CNI must support arm64 and amd64
+# check if the coredns pod is running
+# untaint control plane nodes to run pods -> kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+#  also remove label: kubectl label nodes --all node.kubernetes.io/exclude-from-external-load-balancers-
+# copy kubeconfig file to host
+# join workers to the cluster!
+# Source: https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/adding-linux-nodes/
+# sudo kubeadm token list
+#   if token is expired: sudo kubeadm token create
+# get discovery token ca cert hash  with
+# sudo cat /etc/kubernetes/pki/ca.crt | openssl x509 -pubkey  | openssl rsa -pubin -outform der 2>/dev/null | \
+#    openssl dgst -sha256 -hex | sed 's/^.* //'
