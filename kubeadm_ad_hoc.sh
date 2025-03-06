@@ -76,7 +76,31 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 # https://kubernetes.io/docs/concepts/cluster-administration/addons/
 ## The kubelet service should keep crashing and kubectl should return a connection refused if you take too long to apply the CNI
 ## If necessary run systemctl restart kubelet
-# deploy pod network:
+
+# DEPLOY POD NETWORK
 # https://github.com/flannel-io/flannel#deploying-flannel-manually
 # Pretty much just:
 kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+# Issues with flannel!
+# Error: Failed to check br_netfilter: stat /proc/sys/net/bridge/bridge-nf-call-iptables: no such file or directory
+sudo modprobe br_netfilter
+lsmod | grep br_netfilter # check if it's installed
+# Error: Failed to create SubnetManager: error retrieving pod spec for 'kube-flannel/kube-flannel-ds-bxbcj': Get "https://10.96.0.1:443/api/v1/namespaces/kube-flannel/pods/kube-flannel-ds-bxbcj": dial tcp 10.96.0.1:443: connect: connection refused
+# (deleted the flannel pod and the error changed)
+# Error: E0306 00:38:41.220625       1 main.go:359] Error registering network: failed to acquire lease: node "thinkpad-01" pod cidr not assigned
+echo "br_netfilter" | sudo tee /etc/modules-load.d/k8s-bridge.conf
+cat <<EOF | sudo tee /etc/sysctl.d/k8s-bridge.conf
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+EOF
+sudo sysctl --system
+kubectl delete pod flannel
+# (still the same error)
+# Put these 2 flags in /etc/kubernetes/manifests/kube-controller-manager.yaml:
+# - --allocate-node-cidrs=true
+# - --cluster-cidr=10.244.0.0/16 # This should match your flannel network config
+# This Adds a PodCIDRs property to the node, now we should use this CIDR in the flannel config
+kubectl get configmap --namespace kube-flannel
+kubectl delete pod kube-flannel # ()
+# In my case I also got kube proxy and kube scheduler in crashloopbackoff and kube-flannel went pending
+# thought this was the fault of kube-scheduler (most likely it was), but after a few minutes things just started working
