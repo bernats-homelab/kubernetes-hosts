@@ -53,3 +53,30 @@ sudo apt-get update
 sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 sudo systemctl enable --now kubelet # check if kubelet is installed correctly, should keep failing
+
+# CREATE CLUSTER
+# back to https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/
+# check the control plane advertised IP with:
+ip route show
+kubeadm config images pull # do this before running kubeadm init to save some time
+sudo kubeadm init
+# got this error: [ERROR FileContent--proc-sys-net-ipv4-ip_forward]: /proc/sys/net/ipv4/ip_forward contents are not set to 1
+# solve with setting net.ipv4.ip_forward to 1 on /etc/sysctl.conf and running sysctl -p to apply changes
+## kubeadm init should give the output below
+# Your Kubernetes control-plane has initialized successfully!
+# To start using your cluster, you need to run the following as a regular user:
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+# Alternatively, if you are the root user, you can run:
+# (remember to run sudo su before)
+export KUBECONFIG=/etc/kubernetes/admin.conf
+# You should now deploy a pod network to the cluster.
+# Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+# https://kubernetes.io/docs/concepts/cluster-administration/addons/
+## The kubelet service should keep crashing and kubectl should return a connection refused if you take too long to apply the CNI
+## If necessary run systemctl restart kubelet
+# deploy pod network:
+# https://github.com/flannel-io/flannel#deploying-flannel-manually
+# Pretty much just:
+kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
