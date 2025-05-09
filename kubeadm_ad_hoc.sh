@@ -103,4 +103,8 @@ kubectl delete pod flannel
 kubectl get configmap --namespace kube-flannel
 kubectl delete pod kube-flannel # ()
 # In my case I also got kube proxy and kube scheduler in crashloopbackoff and kube-flannel went pending
-# thought this was the fault of kube-scheduler (most likely it was), but after a few minutes things just started working
+# thought this was the fault of kube-scheduler (most likely it was), but after a few minutes things just started working...?
+
+# Then you can join any number of worker nodes by running the following on each as root:
+kubeadm join 192.168.1.22:6443 --token w78aq5.4s023c4iqjbyv0zr \
+  --discovery-token-ca-cert-hash sha256:b9e215546eb9f6518ee0a87bd5e80f38203b7d94c0c33d2f03b0e1dd1589f654
